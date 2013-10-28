@@ -4,11 +4,7 @@
 #define CL_USE_DEPRECATED_OPENCL_1_1_APIS // define CL_USE_DEPRECATED_OPENCL_1_1_APIS until further
 #define __CL_ENABLE_EXCEPTIONS            // enable exceptions
 
-#if defined(__APPLE__) || defined(__MACOSX)
-#  include <OpenCL/cl.hpp>
-#else
-#  include <CL/cl.hpp>
-#endif
+#include <CL/cl.hpp>
 
 #include <iostream>
 
@@ -25,6 +21,44 @@ using std::cout;
 #define PconstStart(obj, w) { unsigned constant = obj.getInfo<w>(); cout << #w << ": ";
 #define PconstTest(w) if (constant == w) cout << #w "\n";
 #define PconstEnd }
+
+std::string getChannelOrder(cl_int image_channel_order) {
+  switch(image_channel_order) {
+    case CL_R: return "CL_R";
+    case CL_Rx: return "CL_Rx";
+    case CL_A: return "CL_A";
+    case CL_INTENSITY: return "CL_INTENSITY";
+    case CL_LUMINANCE: return "CL_LUMINANCE.";
+    case CL_RGx: return "CL_RGx";
+    case CL_RA: return "CL_RA";
+    case CL_RGB: return "CL_RGB";
+    case CL_RGBx: return "CL_RGBx";
+    case CL_RGBA: return "CL_RGBA";
+    case CL_ARGB: return "CL_BGRA";
+  }
+  return "UNKNOWN";
+}
+
+std::string getChannelDataType(cl_int image_channel_data_type) {
+  switch(image_channel_data_type) {
+    case CL_SNORM_INT8: return "CL_SNORM_INT8";
+    case CL_SNORM_INT16: return "CL_SNORM_INT16";
+    case CL_UNORM_INT8: return "CL_UNORM_INT8";
+    case CL_UNORM_INT16: return "CL_UNORM_INT16";
+    case CL_UNORM_SHORT_565: return "CL_UNORM_SHORT_565";
+    case CL_UNORM_SHORT_555: return "CL_UNORM_SHORT_555";
+    case CL_UNORM_INT_101010: return "CL_UNORM_INT_101010";
+    case CL_SIGNED_INT8: return "CL_SIGNED_INT8";
+    case CL_SIGNED_INT16: return "CL_SIGNED_INT16";
+    case CL_SIGNED_INT32: return "CL_SIGNED_INT32";
+    case CL_UNSIGNED_INT8: return "CL_UNSIGNED_INT8";
+    case CL_UNSIGNED_INT16: return "CL_UNSIGNED_INT16";
+    case CL_UNSIGNED_INT32: return "CL_UNSIGNED_INT32";
+    case CL_HALF_FLOAT: return "CL_HALF_FLOAT";
+    case CL_FLOAT: return "CL_FLOAT";
+  }
+  return "UNKNOWN";
+}
 
 int main() {
     try {
@@ -62,6 +96,7 @@ int main() {
                 for (auto size : sizes) { cout << size << " "; }
                 cout << "\n";
 
+
                 P(device, CL_DEVICE_MAX_WORK_GROUP_SIZE);
                 P(device, CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR);
                 P(device, CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT);
@@ -90,6 +125,15 @@ int main() {
                 P(device, CL_DEVICE_IMAGE3D_MAX_DEPTH);
                 // P(device, CL_DEVICE_IMAGE_MAX_BUFFER_SIZE);
                 // P(device, CL_DEVICE_IMAGE_MAX_ARRAY_SIZE);
+                std::vector<cl::ImageFormat> formats;
+                cl::Context(device).getSupportedImageFormats(0,CL_MEM_OBJECT_IMAGE2D,&formats);
+                cout << "CL_DEVICE_SUPPORTED_IMAGE2D_FORMATS:";
+                for (auto format : formats) {
+                  cout << " (" << getChannelOrder(format.image_channel_order) << " - "
+                  << getChannelDataType(format.image_channel_data_type)
+                  << ")";
+                }
+                cout << "\n";
                 P(device, CL_DEVICE_MAX_SAMPLERS);
                 P(device, CL_DEVICE_MAX_PARAMETER_SIZE);
                 P(device, CL_DEVICE_MEM_BASE_ADDR_ALIGN);
